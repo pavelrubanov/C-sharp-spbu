@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 
 namespace FileManager
@@ -16,6 +17,16 @@ namespace FileManager
         }
         private void Init()
         {
+
+            DeserializeAccount();
+
+            LoginForm loginForm = new LoginForm(ref CurrentAccount);
+            if (loginForm.ShowDialog() != DialogResult.OK)
+            {
+                MessageBox.Show("Ошибка авторизации");
+                Close();
+            }
+
             viewToolStripMenuItem.Click += OpenViewSettings;
             accountToolStripMenuItem.Click += OpenAccountSettings;
             FilesList.DoubleClick += File_DoubleClick;
@@ -73,7 +84,26 @@ namespace FileManager
                 fStream.Close();
             }
         }
+        private void SerializeAccount()
+        {
+            var binFormat = new BinaryFormatter();
+            Stream fStream = new FileStream("Account.dat", FileMode.Create, FileAccess.Write, FileShare.None);
+#pragma warning disable SYSLIB0011 // Тип или член устарел
+            binFormat.Serialize(fStream, CurrentAccount);
+#pragma warning restore SYSLIB0011 // Тип или член устарел
+            fStream.Close();
 
+
+        }
+        private void DeserializeAccount()
+        {
+            var binFormat = new BinaryFormatter();
+            Stream fStream = new FileStream("Account.dat", FileMode.Open, FileAccess.Read, FileShare.None);
+#pragma warning disable SYSLIB0011 // Тип или член устарел
+            CurrentAccount = binFormat.Deserialize(fStream) as Account;
+#pragma warning restore SYSLIB0011 // Тип или член устарел
+            fStream.Close();
+        }
         private void ShowDisks()
         {
             DriveInfo[] drives = DriveInfo.GetDrives();
@@ -129,7 +159,8 @@ namespace FileManager
         {
             if (!ShowCatalog(Path.Text))
             {
-                //error
+                MessageBox.Show("Неверный путь");
+                Path.Text = CurrentPath;
             }
         }
         private void GoBack()
@@ -279,10 +310,11 @@ namespace FileManager
         }
         private void OpenAccountSettings(object sender, EventArgs e)
         {
-            Account ac = new Account("2", "3");
-            AccountSettings f = new AccountSettings(ref ac);
-            f.ShowDialog();
-
+            AccountSettings f = new AccountSettings(ref CurrentAccount);
+            if (f.ShowDialog() == DialogResult.OK)
+            {
+                SerializeAccount();
+            }
         }
 
     }

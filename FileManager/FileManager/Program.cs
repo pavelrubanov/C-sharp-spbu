@@ -8,7 +8,11 @@ namespace FileManager
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new Manager());
+            try
+            {
+                Application.Run(new Manager());
+            }
+            catch (Exception ex) { }
         }
     }
 }

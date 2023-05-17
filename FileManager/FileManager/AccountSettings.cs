@@ -32,7 +32,7 @@ namespace FileManager
                 return;
             }
 
-            if (newPasssword.Text == "")
+            if (newPasssword.Text == "" || account.CompareWithPassword(newPasssword.Text))
             {
                 if (account.Name == Login.Text)
                 {
@@ -42,6 +42,7 @@ namespace FileManager
                 {
                     account.ChangeName(Login.Text, oldPassword.Text);
                     MessageBox.Show("Логин успешно изменен");
+                    DialogResult = DialogResult.OK;
                 }
             }
             else
@@ -50,12 +51,14 @@ namespace FileManager
                 {
                     account.ChangePassword(newPasssword.Text, oldPassword.Text);
                     MessageBox.Show("Пароль успешно изменен");
+                    DialogResult = DialogResult.OK;
                 }
                 else
                 {
                     account.ChangeName(Login.Text, oldPassword.Text);
                     account.ChangePassword(newPasssword.Text, oldPassword.Text);
                     MessageBox.Show("Логин и пароль успешно изменены");
+                    DialogResult = DialogResult.OK;
                 }
             }
             Close();

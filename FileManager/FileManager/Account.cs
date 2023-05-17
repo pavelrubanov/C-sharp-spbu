@@ -4,12 +4,14 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FileManager
 {
-    [Serializable]
+    [Serializable] 
     public class Account
     {
+        [NonSerialized] private const string Key = "9y$B&E)";
         private string Password { get; set; }
         public string Name { get; private set; }
         public Account(string Name, string Password)
@@ -45,14 +47,16 @@ namespace FileManager
                 return false;
         }
 
-        [OnSerialized] public void OnSerializing(StreamingContext context)
+        [OnSerializing] public void OnSerializing(StreamingContext context)
         {
-            Name = Name.ToUpper();
-            Password = Password.ToUpper();
+            Name = Crypto.EncryptStringAES(Name, Key);
+            Password = Crypto.EncryptStringAES(Password, Key);
+            //Name = Name.ToUpper();
         }
-        [OnDeserializing] public void OnDeserializing (StreamingContext context)
+        [OnDeserialized] public void OnDeserialized (StreamingContext context)
         {
-
+            Name = Crypto.DecryptStringAES(Name, Key);
+            Password = Crypto.DecryptStringAES(Password, Key);
         }
     }
 }

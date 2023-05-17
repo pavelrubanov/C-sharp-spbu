@@ -12,14 +12,29 @@ namespace FileManager
 {
     public partial class LoginForm : Form
     {
-        public LoginForm()
+        private Account account;
+        public LoginForm(ref Account account)
         {
+            this.account = account;
             InitializeComponent();
         }
 
         private void LoginForm_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void LogButton_Click(object sender, EventArgs e)
+        {
+            if (LoginTextBox.Text == account.Name && account.CompareWithPassword(PasswordTextBox.Text))
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            else
+            {
+                MessageBox.Show("Неверный логин или пароль");
+            }
         }
     }
 }
