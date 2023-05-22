@@ -51,7 +51,6 @@ namespace FileManager
         {
             Name = Crypto.EncryptStringAES(Name, Key);
             Password = Crypto.EncryptStringAES(Password, Key);
-            //Name = Name.ToUpper();
         }
         [OnDeserialized] public void OnDeserialized (StreamingContext context)
         {
