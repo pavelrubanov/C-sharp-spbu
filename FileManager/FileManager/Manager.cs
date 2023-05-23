@@ -1,6 +1,9 @@
+using System.Net;
 using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
+using System.Windows.Forms;
+using static System.Net.WebRequestMethods;
 
 namespace FileManager
 {
@@ -106,62 +109,83 @@ namespace FileManager
         }
         private void ShowDisks()
         {
-            DriveInfo[] drives = DriveInfo.GetDrives();
-            foreach (DriveInfo drive in drives)
-            {
-                Disks.Items.Add(drive.Name);
-            }
-            Disks.SelectedIndex = 0;
-            CurrentPath = Disks.Items[0].ToString();
+            
         }
         private void Disks_SelectedIndexChanged(object sender, EventArgs e)
         {
-            CurrentPath = Disks.SelectedItem.ToString();
-            Update();
+            
         }
         private void Update()
         {
-            Path.Text = CurrentPath;
-            ShowCatalog(CurrentPath);
+            ShowCatalog("");
         }
         private bool ShowCatalog(string path)
         {
-            if (Directory.Exists(path))
+            FilesList.Items.Clear();
+            var client = new WebClient();
+            client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0");
+            client.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+            client.Headers.Add("Accept-Encoding", "br");
+            client.Headers.Add("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
+            string url = "https://www.amazon.com/s?k=" + path + "&i=stripbooks-intl-ship&ref=nb_sb_noss";
+
+            string htmlCode = client.DownloadString(url);
+
+            var document = new HtmlAgilityPack.HtmlDocument();
+            document.LoadHtml(htmlCode);
+
+            string xpath = "//div[@data-component-type='s-search-result']";
+            var bookNodes = document.DocumentNode.SelectNodes(xpath);
+
+            if (bookNodes != null)
             {
-                FilesList.Items.Clear();
-                FilesList.Items.Add("<-");
-                var di = new DirectoryInfo(path);
-                foreach (var el in di.EnumerateDirectories())
+                List<string> bookTitles = new List<string>();
+                List<string> bookLinks = new List<string>();
+
+                foreach (var node in bookNodes)
                 {
-                    string[] s = { el.Name, el.Extension, "<dir>", el.CreationTime.ToShortDateString() };
-                    var item = new ListViewItem(s);
-                    item.Tag = el.FullName;
+                    // Получаем название книги
+                    var titleNode = node.SelectSingleNode(".//span[@class='a-size-medium a-color-base a-text-normal']");
+                    string title = titleNode?.InnerText.Trim();
+
+                    // Получаем ссылку на книгу
+                    var linkNode = node.SelectSingleNode(".//a[contains(@class, 'a-link-normal') and contains(@class, 's-underline-text') and contains(@class, 's-underline-link-text') and contains(@class, 's-link-style') and contains(@class, 'a-text-normal')]");
+                    string link = linkNode?.GetAttributeValue("href", "");
+
+                    if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(link))
+                    {
+                        bookTitles.Add(title);
+                        bookLinks.Add(link);
+                    }
+                }
+                
+                
+                for (int i = 0; i < bookTitles.Count; i++)
+                {
+                    ListViewItem item = new ListViewItem();
+                    item.Text = bookTitles[i];
+                    item.Tag = ($"https://www.amazon.com{bookLinks[i]}");
                     FilesList.Items.Add(item);
                 }
-                foreach (var el in di.EnumerateFiles())
+                 
+
+                Console.WriteLine("Найденные книги:");
+                for (int i = 0; i < bookTitles.Count; i++)
                 {
-                    var size = (new FileInfo(el.FullName)).Length;
-                    string[] s = { el.Name, el.Extension, size.ToString(), el.CreationTime.ToShortDateString() };
-                    var item = new ListViewItem(s);
-                    item.Tag = el.FullName;
-                    FilesList.Items.Add(item);
+                    Console.WriteLine($"{i + 1}. {bookTitles[i]}");
+                    Console.WriteLine($"Ссылка: https://www.amazon.com{bookLinks[i]}");
+                    Console.WriteLine();
                 }
-                Path.Text = path;
-                CurrentPath = Path.Text;
-                return true;
             }
             else
             {
-                return false;
+                Console.WriteLine("Книги не найдены.");
             }
+            return true;
         }
         private void GoToPath_Click(object sender, EventArgs e)
         {
-            if (!ShowCatalog(Path.Text))
-            {
-                MessageBox.Show("Неверный путь");
-                Path.Text = CurrentPath;
-            }
+            ShowCatalog(Path.Text);
         }
         private void GoBack()
         {
@@ -207,30 +231,22 @@ namespace FileManager
 
         private void File_DoubleClick(object sender, EventArgs e)
         {
-            if (FilesList.SelectedItems.Count > 1)
-                return;
-
-            if (FilesList.SelectedItems[0].Index == 0)
+            if (FilesList.SelectedItems.Count == 1)
             {
-                GoBack();
-                return;
-            }
+                string url = FilesList.SelectedItems[0].Tag.ToString(); // Замените ссылкой, которую хотите открыть
+                string browserPath = @"C:\Program Files\Google\Chrome\Application\chrome.exe"; // Укажите путь к исполняемому файлу браузера
 
-            string new_path = FilesList.SelectedItems[0].Tag.ToString();
-            if (File.Exists(new_path))
-            {
                 try
                 {
-                    Process.Start(new_path);
+                    Process.Start(browserPath, url);
                 }
                 catch (Exception ex)
                 {
-
+                    Console.WriteLine("Ошибка при открытии ссылки: " + ex.Message);
                 }
             }
-            ShowCatalog(new_path);
         }
-
+        /*
         # region [buttons]
         private void CreateFolder_Click(object sender, EventArgs e)
         {
@@ -298,6 +314,7 @@ namespace FileManager
 
         }
         #endregion
+        */
         private void OpenViewSettings(object sender, EventArgs e)
         {
             var designForm = new DesignerForm();

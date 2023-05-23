@@ -164,7 +164,6 @@
             Delete.TabIndex = 7;
             Delete.Text = "Удалить";
             Delete.UseVisualStyleBackColor = true;
-            Delete.Click += Delete_Click;
             // 
             // Copy
             // 
@@ -176,7 +175,6 @@
             Copy.TabIndex = 8;
             Copy.Text = "Копировать";
             Copy.UseVisualStyleBackColor = true;
-            Copy.Click += Copy_Click;
             // 
             // Cut
             // 
@@ -188,7 +186,6 @@
             Cut.TabIndex = 9;
             Cut.Text = "Вырезать";
             Cut.UseVisualStyleBackColor = true;
-            Cut.Click += Cut_Click;
             // 
             // Paste
             // 
@@ -200,7 +197,6 @@
             Paste.TabIndex = 10;
             Paste.Text = "Вставить";
             Paste.UseVisualStyleBackColor = true;
-            Paste.Click += Paste_Click;
             // 
             // CreateFolder
             // 
@@ -212,7 +208,6 @@
             CreateFolder.TabIndex = 11;
             CreateFolder.Text = "Создать папку";
             CreateFolder.UseVisualStyleBackColor = false;
-            CreateFolder.Click += CreateFolder_Click;
             // 
             // Rename
             // 
@@ -224,7 +219,6 @@
             Rename.TabIndex = 12;
             Rename.Text = "Переименовать";
             Rename.UseVisualStyleBackColor = true;
-            Rename.Click += Rename_Click;
             // 
             // label2
             // 
