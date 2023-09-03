@@ -18,7 +18,10 @@ namespace FileManager
         private void Init()
         {
 
+
             DeserializeAccount();
+
+            //CurrentAccount = new("User", "123");
 
             LoginForm loginForm = new LoginForm(ref CurrentAccount);
             if (loginForm.ShowDialog() != DialogResult.OK)
