@@ -49,6 +49,7 @@
             Rename = new Button();
             label2 = new Label();
             newFolderName = new TextBox();
+            statistics = new Button();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -102,13 +103,13 @@
             // viewToolStripMenuItem
             // 
             viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            viewToolStripMenuItem.Size = new Size(224, 26);
+            viewToolStripMenuItem.Size = new Size(146, 26);
             viewToolStripMenuItem.Text = "Вид";
             // 
             // accountToolStripMenuItem
             // 
             accountToolStripMenuItem.Name = "accountToolStripMenuItem";
-            accountToolStripMenuItem.Size = new Size(224, 26);
+            accountToolStripMenuItem.Size = new Size(146, 26);
             accountToolStripMenuItem.Text = "Аккаунт";
             // 
             // помощьToolStripMenuItem
@@ -160,7 +161,7 @@
             Delete.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             Delete.Location = new Point(12, 569);
             Delete.Name = "Delete";
-            Delete.Size = new Size(150, 50);
+            Delete.Size = new Size(113, 72);
             Delete.TabIndex = 7;
             Delete.Text = "Удалить";
             Delete.UseVisualStyleBackColor = true;
@@ -170,9 +171,9 @@
             // 
             Copy.Enabled = false;
             Copy.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            Copy.Location = new Point(168, 569);
+            Copy.Location = new Point(131, 569);
             Copy.Name = "Copy";
-            Copy.Size = new Size(150, 50);
+            Copy.Size = new Size(113, 72);
             Copy.TabIndex = 8;
             Copy.Text = "Копировать";
             Copy.UseVisualStyleBackColor = true;
@@ -182,9 +183,9 @@
             // 
             Cut.Enabled = false;
             Cut.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            Cut.Location = new Point(324, 569);
+            Cut.Location = new Point(250, 569);
             Cut.Name = "Cut";
-            Cut.Size = new Size(150, 50);
+            Cut.Size = new Size(113, 72);
             Cut.TabIndex = 9;
             Cut.Text = "Вырезать";
             Cut.UseVisualStyleBackColor = true;
@@ -194,9 +195,9 @@
             // 
             Paste.Enabled = false;
             Paste.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            Paste.Location = new Point(480, 569);
+            Paste.Location = new Point(369, 569);
             Paste.Name = "Paste";
-            Paste.Size = new Size(150, 50);
+            Paste.Size = new Size(113, 72);
             Paste.TabIndex = 10;
             Paste.Text = "Вставить";
             Paste.UseVisualStyleBackColor = true;
@@ -206,9 +207,9 @@
             // 
             CreateFolder.BackColor = Color.Gainsboro;
             CreateFolder.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            CreateFolder.Location = new Point(812, 569);
+            CreateFolder.Location = new Point(848, 569);
             CreateFolder.Name = "CreateFolder";
-            CreateFolder.Size = new Size(201, 50);
+            CreateFolder.Size = new Size(164, 72);
             CreateFolder.TabIndex = 11;
             CreateFolder.Text = "Создать папку";
             CreateFolder.UseVisualStyleBackColor = false;
@@ -218,9 +219,9 @@
             // 
             Rename.Enabled = false;
             Rename.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            Rename.Location = new Point(636, 569);
+            Rename.Location = new Point(488, 569);
             Rename.Name = "Rename";
-            Rename.Size = new Size(170, 50);
+            Rename.Size = new Size(161, 72);
             Rename.TabIndex = 12;
             Rename.Text = "Переименовать";
             Rename.UseVisualStyleBackColor = true;
@@ -244,12 +245,24 @@
             newFolderName.Size = new Size(397, 27);
             newFolderName.TabIndex = 14;
             // 
+            // statistics
+            // 
+            statistics.Enabled = false;
+            statistics.Location = new Point(655, 569);
+            statistics.Name = "statistics";
+            statistics.Size = new Size(187, 72);
+            statistics.TabIndex = 15;
+            statistics.Text = "Статистика\r\n(только txt)";
+            statistics.UseVisualStyleBackColor = true;
+            statistics.Click += statistics_Click;
+            // 
             // Manager
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
-            ClientSize = new Size(1025, 627);
+            ClientSize = new Size(1025, 653);
+            Controls.Add(statistics);
             Controls.Add(newFolderName);
             Controls.Add(label2);
             Controls.Add(Rename);
@@ -295,5 +308,6 @@
         private Button Rename;
         private Label label2;
         private TextBox newFolderName;
+        private Button statistics;
     }
 }

@@ -18,7 +18,7 @@ namespace FileManager
         private void Init()
         {
 
-
+            /*
             DeserializeAccount();
 
             //CurrentAccount = new("User", "123");
@@ -29,14 +29,15 @@ namespace FileManager
                 MessageBox.Show("Ошибка авторизации");
                 Close();
             }
+            */
 
             viewToolStripMenuItem.Click += OpenViewSettings;
             accountToolStripMenuItem.Click += OpenAccountSettings;
             FilesList.DoubleClick += File_DoubleClick;
             ShowDisks();
             Update();
-            DeserializeViewSettings();
-            UpdateViewSettings();
+            //DeserializeViewSettings();
+            //UpdateViewSettings();
         }
         private void UpdateViewSettings()
         {
@@ -184,6 +185,7 @@ namespace FileManager
                 Copy.Enabled = false;
                 Cut.Enabled = false;
                 Rename.Enabled = false;
+                statistics.Enabled = false;
             }
             else if (FilesList.SelectedItems.Count > 1)
             {
@@ -191,6 +193,7 @@ namespace FileManager
                 Cut.Enabled = true;
                 Copy.Enabled = true;
                 Rename.Enabled = false;
+                statistics.Enabled = false;
             }
             else if (FilesList.SelectedItems.Count == 1)
             {
@@ -198,6 +201,13 @@ namespace FileManager
                 Cut.Enabled = true;
                 Copy.Enabled = true;
                 Rename.Enabled = true;
+                var ext = System.IO.Path.GetExtension(FilesList.SelectedItems[0].Tag.ToString());
+                if (ext == ".txt")
+                {
+                    statistics.Enabled = true;
+                }
+                else
+                    statistics.Enabled = false;
             }
             else if (FilesList.SelectedItems.Count == 0)
             {
@@ -205,6 +215,7 @@ namespace FileManager
                 Copy.Enabled = false;
                 Cut.Enabled = false;
                 Rename.Enabled = false;
+                statistics.Enabled = false;
             }
         }
 
@@ -320,5 +331,30 @@ namespace FileManager
             }
         }
 
+        private void statistics_Click(object sender, EventArgs e)
+        {
+            string filePath = FilesList.SelectedItems[0].Tag.ToString();
+            string text = File.ReadAllText(filePath);
+
+            int LinesCount = text.Split('\n').Count();
+
+            string[] Words = text.Split();
+            Words = (from word in Words.AsParallel()
+                    where !string.IsNullOrWhiteSpace(word)
+                    select word).ToArray();
+            int WordsCount = Words.Length;
+
+            //топ-10 наиболее часто встречающихся слов длиной больше 5 букв.
+            string[] PerfectWords = (from word in Words.AsParallel()
+                                    where word.Length > 5
+                                    select word.ToLower()).ToArray();
+            var topWords = PerfectWords
+                .AsParallel()
+                .GroupBy(word => word)
+                .ToDictionary(group => group.Key, group => group.Count())
+                .OrderByDescending(pair => pair.Value)
+                .Take(10);
+
+        }
     }
 }
