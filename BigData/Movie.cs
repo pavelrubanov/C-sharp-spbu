@@ -13,9 +13,8 @@ namespace BigData
         public HashSet<Actor> Actors = new();
         public string Producer { get; set; }
         public HashSet<string> Tags = new();
-        public double Rating { get; set; }
         public int numVotes { get; set; }
-        public string Rate { get;  set; }
+        public double Rate { get;  set; }
         public string imdbId { get; set; }
         public string movieId { get; set; }
         public Movie()
