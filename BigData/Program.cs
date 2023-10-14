@@ -214,7 +214,7 @@ namespace BigData
         private void Run()
         {
             ReadInfo();
-            while (true)
+            while (!true)
             {
                 Console.WriteLine(
                     "\n\nКакую информацию вы хотите получить? \n" +
@@ -229,7 +229,7 @@ namespace BigData
                             string name = Console.ReadLine();
                             try
                             {
-                                Movie movie = movies.Where(t => t.Value.NameRU == name || t.Value.NameUS == name)
+                                Movie movie = movies.AsParallel().Where(t => t.Value.NameRU == name || t.Value.NameUS == name)
                                     .Select(t => t.Value).First();
                                 WriteFilm(movie);
                             }
