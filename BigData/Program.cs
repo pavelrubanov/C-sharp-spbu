@@ -9,16 +9,17 @@ namespace BigData
 {
     internal class Program
     {
-        Dictionary<Actor, HashSet<Movie> > actorsMovies = new();
-        Dictionary<string, HashSet<Movie>> tagsMovies = new();
-        Dictionary<string, Movie> moviesImdb = new();
-        Dictionary<string, Movie> movies = new();
-        Dictionary<string, Actor> actors = new();
-        Dictionary<string, string> tags = new();
+        private Dictionary<Actor, HashSet<Movie> > actorsMovies = new();
+        private Dictionary<string, HashSet<Movie>> tagsMovies = new();
+        private Dictionary<string, Movie> moviesImdb = new();
+        private Dictionary<string, Movie> movies = new();
+        private Dictionary<string, Actor> actors = new();
+        private Dictionary<string, string> tags = new();
         public static void WriteFilm (Movie movie)
         {
             Console.WriteLine("\nНазвание RU: " + movie.NameRU);
             Console.WriteLine("Название US: " + movie.NameUS);
+            Console.WriteLine("Рейтинг: " + movie.Rate);
             Console.WriteLine("Актеры:");
             foreach (var actor in movie.Actors)
             {
@@ -32,7 +33,7 @@ namespace BigData
             Console.WriteLine();
         }
 
-        private void ReadInfo()
+        private void ReadMovieCodes_IMDB()
         {
             string filePath = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\MovieCodes_IMDB.tsv";
             using (StreamReader reader = new StreamReader(filePath))
@@ -41,7 +42,7 @@ namespace BigData
                 reader.ReadLine();
                 while ((line = reader.ReadLine()) != null)
                 {
-                    
+
                     string[] fields = line.Split('\t');
                     if (fields[3] == "RU" || fields[4] == "RU")
                     {
@@ -75,13 +76,15 @@ namespace BigData
                     }
                 }
             }
-
+        }
+        private void ReadActorsDirectorsNames_IMDB()
+        {
             string filePath1 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\ActorsDirectorsNames_IMDB.txt";
             using (StreamReader reader = new StreamReader(filePath1))
             {
                 string line;
                 reader.ReadLine();
-                while ((line = reader.ReadLine()) != null )
+                while ((line = reader.ReadLine()) != null)
                 {
                     string[] fields = line.Split('\t');
                     Actor actor = new Actor();
@@ -90,7 +93,9 @@ namespace BigData
                     actors[actor.Id] = actor;
                 }
             }
-
+        }
+        private void ReadActorsDirectorsCodes_IMDB()
+        {
             string filePath2 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\ActorsDirectorsCodes_IMDB.tsv";
             using (StreamReader reader = new StreamReader(filePath2))
             {
@@ -110,10 +115,12 @@ namespace BigData
                         }
                         actorsMovies[actors[actorId]].Add(moviesImdb[filmIMDBid]);
                     }
-                    
+
                 }
             }
-
+        }
+        private void ReadRatings_IMDB()
+        {
             string filePath3 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\Ratings_IMDB.tsv";
             using (StreamReader reader = new StreamReader(filePath3))
             {
@@ -123,7 +130,7 @@ namespace BigData
                 {
                     string[] fields = line.Split('\t');
                     string filmIMDBid = fields[0];
-                    string rate = fields[1];
+                    double rate = Convert.ToDouble(fields[1], CultureInfo.InvariantCulture);
                     int numVotes = int.Parse(fields[2]);
                     if (moviesImdb.ContainsKey(filmIMDBid))
                     {
@@ -132,7 +139,9 @@ namespace BigData
                     }
                 }
             }
-
+        }
+        private void Readlinks_IMDB_MovieLens()
+        {
             string filePath4 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\links_IMDB_MovieLens.csv";
             using (StreamReader reader = new StreamReader(filePath4))
             {
@@ -147,10 +156,12 @@ namespace BigData
                     {
                         moviesImdb[imdbId].movieId = movieId;
                         movies[movieId] = moviesImdb[imdbId];
-                    } 
+                    }
                 }
             }
-
+        }
+        private void ReadTagCodes_MovieLens()
+        {
             string filePath5 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\TagCodes_MovieLens.csv";
             using (StreamReader reader = new StreamReader(filePath5))
             {
@@ -164,7 +175,9 @@ namespace BigData
                     tags[tagId] = tag;
                 }
             }
-
+        }
+        private void ReadTagScores_MovieLens()
+        {
             string filePath6 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\TagScores_MovieLens.csv";
             using (StreamReader reader = new StreamReader(filePath6))
             {
@@ -176,7 +189,7 @@ namespace BigData
                     string movieId = fields[0];
                     string tagId = fields[1];
                     double relevance = Convert.ToDouble(fields[2], CultureInfo.InvariantCulture);
-                    if (relevance > 0.5 && movies.ContainsKey(movieId) && tags.ContainsKey(tagId)) 
+                    if (relevance > 0.5 && movies.ContainsKey(movieId) && tags.ContainsKey(tagId))
                     {
                         movies[movieId].Tags.Add(tags[tagId]);
                         if (!tagsMovies.ContainsKey(tags[tagId]))
@@ -188,10 +201,19 @@ namespace BigData
                 }
             }
         }
-        public static void Main(string[] args)
+        private void ReadInfo()
         {
-            Program p = new Program();
-            p.ReadInfo();
+            ReadMovieCodes_IMDB();
+            ReadActorsDirectorsNames_IMDB();
+            ReadActorsDirectorsCodes_IMDB();
+            ReadRatings_IMDB();
+            Readlinks_IMDB_MovieLens();
+            ReadTagCodes_MovieLens();
+            ReadTagScores_MovieLens();
+        }
+        private void Run()
+        {
+            ReadInfo();
             while (true)
             {
                 Console.WriteLine(
@@ -199,7 +221,7 @@ namespace BigData
                     "1) О фильме \n" +
                     "2) Об актере-режиссере \n" +
                     "3) О конкретном тэге");
-               switch (Console.ReadLine())
+                switch (Console.ReadLine())
                 {
                     case "1":
                         {
@@ -207,11 +229,11 @@ namespace BigData
                             string name = Console.ReadLine();
                             try
                             {
-                                Movie movie = p.movies.Where(t => t.Value.NameRU == name || t.Value.NameUS == name)
+                                Movie movie = movies.Where(t => t.Value.NameRU == name || t.Value.NameUS == name)
                                     .Select(t => t.Value).First();
                                 WriteFilm(movie);
                             }
-                            catch(Exception)
+                            catch (Exception)
                             {
                                 Console.WriteLine("Ничего не найдено");
                             }
@@ -223,10 +245,10 @@ namespace BigData
                             string name = Console.ReadLine();
                             try
                             {
-                                Actor actor = p.actors.Where(t => t.Value.Name == name).Select(t => t.Value).First();
+                                Actor actor = actors.Where(t => t.Value.Name == name).Select(t => t.Value).First();
                                 Console.WriteLine("Имя: " + actor.Name);
                                 Console.WriteLine("Фильмы:");
-                                foreach (var movie in p.actorsMovies[actor])
+                                foreach (var movie in actorsMovies[actor])
                                 {
                                     WriteFilm(movie);
                                 }
@@ -243,12 +265,12 @@ namespace BigData
                             string tag = Console.ReadLine();
                             try
                             {
-                                foreach (var film in p.tagsMovies[tag])
+                                foreach (var film in tagsMovies[tag])
                                 {
                                     WriteFilm(film);
                                 }
                             }
-                            catch(Exception)
+                            catch (Exception)
                             {
                                 Console.WriteLine("Ничего не найдено");
                             }
@@ -261,6 +283,11 @@ namespace BigData
                         }
                 }
             }
+        }
+        public static void Main(string[] args)
+        {
+            Program p = new Program();
+            p.Run();
         }
     }
 }
