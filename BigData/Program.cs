@@ -3,6 +3,7 @@ using System.ComponentModel.Design;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Security.Cryptography;
 
 namespace BigData
@@ -86,10 +87,10 @@ namespace BigData
                 reader.ReadLine();
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] fields = line.Split('\t');
                     Actor actor = new Actor();
-                    actor.Id = fields[0];
-                    actor.Name = fields[1];
+                    actor.Id = line.Substring(0, 9);
+                    int delimeter = line.IndexOf('\t', 10);
+                    actor.Name = line.Substring(10, delimeter - 10);
                     actors[actor.Id] = actor;
                 }
             }
@@ -103,9 +104,8 @@ namespace BigData
                 reader.ReadLine();
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] fields = line.Split('\t');
-                    string filmIMDBid = fields[0];
-                    string actorId = fields[2];
+                    string filmIMDBid = line.Substring(0, 9);
+                    string actorId = line.Substring(12, 9);
                     if (moviesImdb.ContainsKey(filmIMDBid) && actors.ContainsKey(actorId))
                     {
                         moviesImdb[filmIMDBid].Actors.Add(actors[actorId]);
@@ -128,14 +128,11 @@ namespace BigData
                 reader.ReadLine();
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] fields = line.Split('\t');
-                    string filmIMDBid = fields[0];
-                    double rate = Convert.ToDouble(fields[1], CultureInfo.InvariantCulture);
-                    int numVotes = int.Parse(fields[2]);
+                    string filmIMDBid = line.Substring(0, 9);
+                    double rate = Convert.ToDouble(line.Substring(10, 3), CultureInfo.InvariantCulture);
                     if (moviesImdb.ContainsKey(filmIMDBid))
                     {
                         moviesImdb[filmIMDBid].Rate = rate;
-                        moviesImdb[filmIMDBid].numVotes = numVotes;
                     }
                 }
             }
@@ -149,9 +146,9 @@ namespace BigData
                 reader.ReadLine();
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] fields = line.Split(',');
-                    string movieId = fields[0];
-                    string imdbId = "tt" + fields[1];
+                    int delimeter = line.IndexOf(',');
+                    string movieId = line.Substring(0, delimeter);
+                    string imdbId = "tt" + line.Substring(delimeter + 1, 7);
                     if (moviesImdb.ContainsKey(imdbId))
                     {
                         moviesImdb[imdbId].movieId = movieId;
@@ -169,9 +166,9 @@ namespace BigData
                 reader.ReadLine();
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] fields = line.Split(',');
-                    string tagId = fields[0];
-                    string tag = fields[1];
+                    int delimeter = line.IndexOf(',');
+                    string tagId = line.Substring(0, delimeter);
+                    string tag = line.Substring(delimeter + 1);
                     tags[tagId] = tag;
                 }
             }
@@ -214,11 +211,7 @@ namespace BigData
         private void Run()
         {
             ReadInfo();
-<<<<<<< HEAD
             while (!true)
-=======
-            while (true)
->>>>>>> a931b3f144dadba53534aff137d979fa16f4db0a
             {
                 Console.WriteLine(
                     "\n\nКакую информацию вы хотите получить? \n" +
@@ -233,11 +226,7 @@ namespace BigData
                             string name = Console.ReadLine();
                             try
                             {
-<<<<<<< HEAD
                                 Movie movie = movies.AsParallel().Where(t => t.Value.NameRU == name || t.Value.NameUS == name)
-=======
-                                Movie movie = movies.Where(t => t.Value.NameRU == name || t.Value.NameUS == name)
->>>>>>> a931b3f144dadba53534aff137d979fa16f4db0a
                                     .Select(t => t.Value).First();
                                 WriteFilm(movie);
                             }
