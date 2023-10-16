@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.ComponentModel.Design;
 using System.Dynamic;
 using System.Globalization;
@@ -10,12 +11,7 @@ namespace BigData
 {
     internal class Program
     {
-        private Dictionary<Actor, HashSet<Movie> > actorsMovies = new();
-        private Dictionary<string, HashSet<Movie>> tagsMovies = new();
-        private Dictionary<string, Movie> moviesImdb = new();
-        private Dictionary<string, Movie> movies = new();
-        private Dictionary<string, Actor> actors = new();
-        private Dictionary<string, string> tags = new();
+        
         public static void WriteFilm (Movie movie)
         {
             Console.WriteLine("\nНазвание RU: " + movie.NameRU);
@@ -33,8 +29,7 @@ namespace BigData
             }
             Console.WriteLine();
         }
-
-        private void ReadMovieCodes_IMDB()
+        private  void ReadMovieCodes_IMDB(ConcurrentDictionary<string, Movie> moviesImdb)
         {
             string filePath = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\MovieCodes_IMDB.tsv";
             using (StreamReader reader = new StreamReader(filePath))
@@ -47,6 +42,7 @@ namespace BigData
                     string[] fields = line.Split('\t');
                     if (fields[3] == "RU" || fields[4] == "RU")
                     {
+
                         string imdbId = fields[0];
                         if (moviesImdb.ContainsKey(imdbId))
                         {
@@ -77,8 +73,9 @@ namespace BigData
                     }
                 }
             }
+            Console.WriteLine("t1");
         }
-        private void ReadActorsDirectorsNames_IMDB()
+        private void ReadActorsDirectorsNames_IMDB(ConcurrentDictionary<string, Actor> actors)
         {
             string filePath1 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\ActorsDirectorsNames_IMDB.txt";
             using (StreamReader reader = new StreamReader(filePath1))
@@ -94,8 +91,9 @@ namespace BigData
                     actors[actor.Id] = actor;
                 }
             }
+            Console.WriteLine("t2");
         }
-        private void ReadActorsDirectorsCodes_IMDB()
+        private void ReadActorsDirectorsCodes_IMDB(ConcurrentDictionary<string, Movie> moviesImdb, ConcurrentDictionary<string, Actor> actors, ConcurrentDictionary<Actor, HashSet<Movie>> actorsMovies)
         {
             string filePath2 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\ActorsDirectorsCodes_IMDB.tsv";
             using (StreamReader reader = new StreamReader(filePath2))
@@ -115,11 +113,11 @@ namespace BigData
                         }
                         actorsMovies[actors[actorId]].Add(moviesImdb[filmIMDBid]);
                     }
-
                 }
             }
+            Console.WriteLine("t3");
         }
-        private void ReadRatings_IMDB()
+        private void ReadRatings_IMDB(ConcurrentDictionary<string, Movie> moviesImdb)
         {
             string filePath3 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\Ratings_IMDB.tsv";
             using (StreamReader reader = new StreamReader(filePath3))
@@ -136,8 +134,9 @@ namespace BigData
                     }
                 }
             }
+            Console.WriteLine("t4");
         }
-        private void Readlinks_IMDB_MovieLens()
+        private  void Readlinks_IMDB_MovieLens(ConcurrentDictionary<string, Movie> moviesImdb, ConcurrentDictionary<string, Movie> movies)
         {
             string filePath4 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\links_IMDB_MovieLens.csv";
             using (StreamReader reader = new StreamReader(filePath4))
@@ -156,8 +155,9 @@ namespace BigData
                     }
                 }
             }
+            Console.WriteLine("t5");
         }
-        private void ReadTagCodes_MovieLens()
+        private  void ReadTagCodes_MovieLens(ConcurrentDictionary<string, string> tags)
         {
             string filePath5 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\TagCodes_MovieLens.csv";
             using (StreamReader reader = new StreamReader(filePath5))
@@ -172,8 +172,9 @@ namespace BigData
                     tags[tagId] = tag;
                 }
             }
+            Console.WriteLine("t6");
         }
-        private void ReadTagScores_MovieLens()
+        private  void ReadTagScores_MovieLens(ConcurrentDictionary<string, Movie> movies, ConcurrentDictionary<string, string> tags, ConcurrentDictionary<string, HashSet<Movie>> tagsMovies)
         {
             string filePath6 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\TagScores_MovieLens.csv";
             using (StreamReader reader = new StreamReader(filePath6))
@@ -196,22 +197,36 @@ namespace BigData
                         tagsMovies[tags[tagId]].Add(movies[movieId]);
                     }
                 }
+                Console.WriteLine("t7");
             }
         }
-        private void ReadInfo()
+        
+        
+        private async void ReadInfo()
         {
-            ReadMovieCodes_IMDB();
-            ReadActorsDirectorsNames_IMDB();
-            ReadActorsDirectorsCodes_IMDB();
-            ReadRatings_IMDB();
-            Readlinks_IMDB_MovieLens();
-            ReadTagCodes_MovieLens();
-            ReadTagScores_MovieLens();
+            ConcurrentDictionary<Actor, HashSet<Movie>> actorsMovies = new();
+            ConcurrentDictionary<string, HashSet<Movie>> tagsMovies = new();
+            ConcurrentDictionary<string, Movie> moviesImdb = new();
+            ConcurrentDictionary<string, Movie> movies = new();
+            ConcurrentDictionary<string, Actor> actors = new();
+            ConcurrentDictionary<string, string> tags = new();
+
+            Task t1 = Task.Factory.StartNew(() => ReadMovieCodes_IMDB(moviesImdb), TaskCreationOptions.LongRunning);
+            Task t2 = Task.Factory.StartNew(() => ReadActorsDirectorsNames_IMDB(actors), TaskCreationOptions.LongRunning);
+            Task t6 = Task.Factory.StartNew(() => ReadTagCodes_MovieLens(tags), TaskCreationOptions.LongRunning);
+            Task t4 = t1.ContinueWith(t => ReadRatings_IMDB(moviesImdb)); 
+            Task t5 = t1.ContinueWith(t => Readlinks_IMDB_MovieLens(moviesImdb, movies));
+            Task t3 = Task.WhenAll(t1, t2).ContinueWith(_ => ReadActorsDirectorsCodes_IMDB(moviesImdb, actors, actorsMovies));
+            Task t7 = Task.WhenAll(t5, t6).ContinueWith(_ => ReadTagScores_MovieLens(movies, tags, tagsMovies));
+            
+            
+            Task.WaitAll(t1, t2, t3, t4, t5, t6, t7);            
         }
         private void Run()
         {
             ReadInfo();
-            while (!true)
+
+            /*while (!true)
             {
                 Console.WriteLine(
                     "\n\nКакую информацию вы хотите получить? \n" +
@@ -280,6 +295,7 @@ namespace BigData
                         }
                 }
             }
+            */
         }
         public static void Main(string[] args)
         {
