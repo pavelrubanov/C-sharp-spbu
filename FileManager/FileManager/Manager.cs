@@ -239,7 +239,7 @@ namespace FileManager
                 }
                 catch (Exception ex)
                 {
-
+                    MessageBox.Show(ex.Message);
                 }
             }
             ShowCatalog(new_path);
@@ -355,6 +355,14 @@ namespace FileManager
                 .OrderByDescending(pair => pair.Value)
                 .Take(10);
 
+            string topWordsString = "";
+            foreach (var  word in topWords)
+            {
+                topWordsString += word + ", ";
+            }
+            MessageBox.Show("кол-во слов: " + WordsCount +
+                            "\nкол-во строк " + LinesCount +
+                            "\nтоп слов: " + topWordsString);
         }
     }
 }
