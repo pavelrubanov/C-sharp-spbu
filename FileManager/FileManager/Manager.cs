@@ -338,25 +338,19 @@ namespace FileManager
 
             int LinesCount = text.Split('\n').Count();
 
-            string[] Words = text.Split();
-            Words = (from word in Words.AsParallel()
-                    where !string.IsNullOrWhiteSpace(word)
-                    select word).ToArray();
+            string[] Words = text.Split(new char[] {' ', ',', '.', '?', '!', ';',')','(' },StringSplitOptions.RemoveEmptyEntries);
             int WordsCount = Words.Length;
 
             //топ-10 наиболее часто встречающихся слов длиной больше 5 букв.
-            string[] PerfectWords = (from word in Words.AsParallel()
-                                    where word.Length > 5
-                                    select word.ToLower()).ToArray();
-            var topWords = PerfectWords
-                .AsParallel()
+            var PerfectWords = (from word in Words.AsParallel()
+                                where word.Length > 5)
                 .GroupBy(word => word)
                 .ToDictionary(group => group.Key, group => group.Count())
                 .OrderByDescending(pair => pair.Value)
                 .Take(10);
 
             string topWordsString = "";
-            foreach (var  word in topWords)
+            foreach (var  word in PerfectWords)
             {
                 topWordsString += word + ", ";
             }
