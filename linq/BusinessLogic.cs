@@ -93,7 +93,7 @@ namespace LinqTask
         public List<User> GetUsersPage(int pageSize, int pageIndex)
         {
             return (from user in users
-                    select user).Skip(pageIndex).Take(pageSize).ToList();
+                    select user).Skip(pageIndex - 1).Take(pageSize).ToList();
         }
     }
 }
