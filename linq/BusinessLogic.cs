@@ -12,7 +12,20 @@ namespace LinqTask
         private List<Record> records = new List<Record>();
         public BusinessLogic()
         {
-
+            users.Add(new User(1, "Ryhor", "Vikhrau"));
+            users.Add(new User(2, "Akexander", "Sivkov"));
+            users.Add(new User(3, "Egor", "Liapin"));
+            users.Add(new User(4, "Ivan", "Brdu"));
+            users.Add(new User(5, "Ryhor", "Vikhrau"));
+            users.Add(new User(6, "Mihail", "Avsianikov"));
+            users.Add(new User(7, "Mihfrrail", "Avsfrfrianikov"));
+            records.Add(new Record(users[1], "I want buy something"));
+            records.Add(new Record(users[2], "I want buy something"));
+            records.Add(new Record(users[3], "I want buy somethfwmfwnmfing"));
+            records.Add(new Record(users[5], "I want buy somefeeefthing"));
+            records.Add(new Record(users[4], "I wanfefet buy something"));
+            records.Add(new Record(users[3], "I wanfefret buy something"));
+            records.Add(new Record(users[2], "I want ferebuy something"));
         }
         public List<User> GetUsersBySurname(String surname)
         {
