@@ -10,3 +10,4 @@ PLINQ
 Tasks
 Многопоточность
 Работа с большими данными
+Entity Framework
