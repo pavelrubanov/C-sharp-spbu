@@ -1,4 +1,4 @@
-# Programming homeworks. (watch branches) .NET 7 C#
+Programming homeworks. (watch branches) .NET 7 C#
 
 Изученно:
 Алгоритмы
