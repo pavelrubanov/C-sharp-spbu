@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BigData
 {
-    internal class Actor
+    public class Actor
     {
         public string Name { get; set; }
         public string Id { get; set; }

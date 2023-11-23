@@ -12,11 +12,11 @@ namespace BigData
     internal class Program
     {
         Dictionary<Actor, HashSet<Movie>> actorsMovies = new();
-        Dictionary<string, HashSet<Movie>> tagsMovies = new();
+        Dictionary<Tag, HashSet<Movie>> tagsMovies = new();
         Dictionary<string, Movie> moviesImdb = new();
         Dictionary<string, Movie> movies = new();
         Dictionary<string, Actor> actors = new();
-        Dictionary<string, string> tags = new();
+        Dictionary<string, Tag> tags = new();
         public static void WriteFilm (Movie movie)
         {
             Console.WriteLine("\nНазвание RU: " + movie.NameRU);
@@ -36,7 +36,7 @@ namespace BigData
         }
         private void ReadMovieCodes_IMDB(BlockingCollection<string> lines)
         {
-            string filePath = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\MovieCodes_IMDB.tsv";
+            string filePath = "..\\..\\..\\ml-latest\\MovieCodes_IMDB.tsv"; 
             using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
@@ -49,7 +49,7 @@ namespace BigData
             }
             Console.WriteLine("t1");
         }
-        private void ProccesMovieCodes_IMDB(BlockingCollection<string> lines)
+        private void ProcessMovieCodes_IMDB(BlockingCollection<string> lines)
         {
             foreach (var line in lines.GetConsumingEnumerable())
             {
@@ -63,39 +63,53 @@ namespace BigData
 
                         if (moviesImdb.ContainsKey(imdbId))
                         {
-                            moviesImdb[imdbId].NameRU = fields[2];
+                            lock(moviesImdb)
+                            {
+                                moviesImdb[imdbId].NameRU = fields[2];
+                            }
                         }
                         else
                         {
                             Movie movie = new Movie();
                             movie.NameRU = fields[2];
                             movie.imdbId = fields[0];
-                            moviesImdb[movie.imdbId] = movie;
+                            lock(moviesImdb)
+                            {
+                                moviesImdb[movie.imdbId] = movie;
+                            }
                         }
                     }
                     if (fields[3] == "US" || fields[4] == "US")
                     {
                         if (moviesImdb.ContainsKey(imdbId))
                         {
-                            moviesImdb[imdbId].NameUS = fields[2];
+                            lock(moviesImdb)
+                            {
+                                moviesImdb[imdbId].NameUS = fields[2];
+                            }
+                            
                         }
                         else
                         {
                             Movie movie = new Movie();
                             movie.NameUS = fields[2];
                             movie.imdbId = fields[0];
-                            moviesImdb[movie.imdbId] = movie;
+                            lock(moviesImdb)
+                            {
+                                moviesImdb[movie.imdbId] = movie;
+                            }
+                            
                         }
                     }
                 }
             }
-            Console.WriteLine("t1 Procces");
+            Console.WriteLine("t1 procces done");
         }
 
         private void ReadActorsDirectorsNames_IMDB(BlockingCollection<string> lines)
         {
-            string filePath1 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\ActorsDirectorsNames_IMDB.txt";
-            using (StreamReader reader = new StreamReader(filePath1))
+            string filePath = "..\\..\\..\\ml-latest\\ActorsDirectorsNames_IMDB.txt";
+            using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
                 reader.ReadLine();
@@ -112,18 +126,28 @@ namespace BigData
             foreach (var line in lines.GetConsumingEnumerable())
             {
                 Actor actor = new Actor();
-                actor.Id = line.Substring(0, 9);
-                int delimeter = line.IndexOf('\t', 10);
-                actor.Name = line.Substring(10, delimeter - 10);
-                actors[actor.Id] = actor;
+
+                var lineSpan = line.AsSpan();
+
+                var index = lineSpan.IndexOf('\t');
+                actor.Id = lineSpan.Slice(0, index).ToString();
+                lineSpan = lineSpan.Slice(index + 1);
+
+                index = lineSpan.IndexOf('\t');
+                actor.Name = lineSpan.Slice(0, index).ToString();
+
+                lock(actors)
+                {
+                    actors[actor.Id] = actor;
+                }                
             }
-            Console.WriteLine("t2 Procces");
+            Console.WriteLine("t2 procces done");
 
         }
         private void ReadActorsDirectorsCodes_IMDB(BlockingCollection<string> lines)
         {
-            string filePath2 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\ActorsDirectorsCodes_IMDB.tsv";
-            using (StreamReader reader = new StreamReader(filePath2))
+            string filePath = "..\\..\\..\\ml-latest\\ActorsDirectorsCodes_IMDB.tsv";
+            using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
                 reader.ReadLine();
@@ -135,29 +159,48 @@ namespace BigData
             }
             Console.WriteLine("t3");
         }
-        private void ProccesActorsDirectorsCodes_IMDB(BlockingCollection<string> lines)
+        private void ProcessActorsDirectorsCodes_IMDB(BlockingCollection<string> lines)
         {
             foreach (var line in lines.GetConsumingEnumerable())
             {
-                string filmIMDBid = line.Substring(0, 9);
-                string actorId = line.Substring(12, 9);
+                var lineSpan = line.AsSpan();
+                var index = lineSpan.IndexOf('\t');
+                string filmIMDBid = lineSpan.Slice(0, index).ToString();
+                lineSpan = lineSpan.Slice(index + 1);
+
+                index = lineSpan.IndexOf("\t");
+                lineSpan = lineSpan.Slice(index + 1);
+
+                index = lineSpan.IndexOf("\t");
+                string actorId = lineSpan.Slice(0, index).ToString();
+
                 if (moviesImdb.ContainsKey(filmIMDBid) && actors.ContainsKey(actorId))
                 {
-                    moviesImdb[filmIMDBid].Actors.Add(actors[actorId]);
+                    lock (moviesImdb)
+                    {
+                        moviesImdb[filmIMDBid].Actors.Add(actors[actorId]);
+                    }
+                    
                     if (!actorsMovies.ContainsKey(actors[actorId]))
                     {
-                        actorsMovies[actors[actorId]] = new();
+                        lock (actorsMovies)
+                        {
+                            actorsMovies[actors[actorId]] = new();
+                        }                        
                     }
-                    actorsMovies[actors[actorId]].Add(moviesImdb[filmIMDBid]);
+                    lock(actorsMovies)
+                    {
+                        actorsMovies[actors[actorId]].Add(moviesImdb[filmIMDBid]);
+                    }                    
                 }
             }
-            Console.WriteLine("t3 Procces");
+            Console.WriteLine("t3 procces done");
         }
 
         private void ReadRatings_IMDB(BlockingCollection<string> lines)
         {
-            string filePath3 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\Ratings_IMDB.tsv";
-            using (StreamReader reader = new StreamReader(filePath3))
+            string filePath = "..\\..\\..\\ml-latest\\Ratings_IMDB.tsv";
+            using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
                 reader.ReadLine();
@@ -169,24 +212,35 @@ namespace BigData
             }
             Console.WriteLine("t4");
         }
-        private void ProccesRatings_IMDB(BlockingCollection<string> lines)
+        private void ProcessRatings_IMDB(BlockingCollection<string> lines)
         {
             foreach (var line in lines.GetConsumingEnumerable())
             {
-                string filmIMDBid = line.Substring(0, 9);
-                double rate = Convert.ToDouble(line.Substring(10, 3), CultureInfo.InvariantCulture);
+                var lineSpan = line.AsSpan();
+
+                int index = lineSpan.IndexOf('\t');
+                string filmIMDBid = lineSpan.Slice(0, index).ToString();
+
+                lineSpan = lineSpan.Slice(index + 1);
+                index = lineSpan.IndexOf('\t');
+                double rate = Convert.ToDouble(lineSpan.Slice(0, index).ToString(), CultureInfo.InvariantCulture);
+
                 if (moviesImdb.ContainsKey(filmIMDBid))
                 {
-                    moviesImdb[filmIMDBid].Rate = rate;
+                    lock(moviesImdb)
+                    {
+                        moviesImdb[filmIMDBid].Rate = rate;
+                    }
+                    
                 }
             }
-            Console.WriteLine("t4 Procces");
+            Console.WriteLine("t4 procces done");
 
         }
         private void Readlinks_IMDB_MovieLens(BlockingCollection<string> lines)
         {
-            string filePath4 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\links_IMDB_MovieLens.csv";
-            using (StreamReader reader = new StreamReader(filePath4))
+            string filePath = "..\\..\\..\\ml-latest\\links_IMDB_MovieLens.csv";
+            using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
                 reader.ReadLine();
@@ -198,25 +252,38 @@ namespace BigData
             }
             Console.WriteLine("t5");
         }
-        private void Procceslinks_IMDB_MovieLens(BlockingCollection<string> lines)
+        private void Processlinks_IMDB_MovieLens(BlockingCollection<string> lines)
         {
             foreach(var line in lines.GetConsumingEnumerable())
             {
-                int delimeter = line.IndexOf(',');
-                string movieId = line.Substring(0, delimeter);
-                string imdbId = "tt" + line.Substring(delimeter + 1, 7);
+                var lineSpan = line.AsSpan();
+
+                int index = lineSpan.IndexOf(',');
+                string movieId = lineSpan.Slice(0, index).ToString();
+
+                lineSpan = lineSpan.Slice(index + 1);
+                index = lineSpan.IndexOf(',');
+                string imdbId = "tt" + lineSpan.Slice(0, index).ToString();
+
+
                 if (moviesImdb.ContainsKey(imdbId))
                 {
-                    moviesImdb[imdbId].movieId = movieId;
-                    movies[movieId] = moviesImdb[imdbId];
+                    lock (moviesImdb[imdbId])
+                    {
+                        moviesImdb[imdbId].movieId = movieId;
+                    }
+                    lock (movies)
+                    {
+                        movies[movieId] = moviesImdb[imdbId];
+                    }
                 }
             }
-            Console.WriteLine("t5 Procces");
+            Console.WriteLine("t5 procces done");
         }
         private void ReadTagCodes_MovieLens(BlockingCollection<string> lines)
         {
-            string filePath5 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\TagCodes_MovieLens.csv";
-            using (StreamReader reader = new StreamReader(filePath5))
+            string filePath = "..\\..\\..\\ml-latest\\TagCodes_MovieLens.csv";
+            using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
                 reader.ReadLine();
@@ -228,21 +295,29 @@ namespace BigData
             }
             Console.WriteLine("t6");
         }
-        private void ProccesTagCodes_MovieLens(BlockingCollection<string> lines)
+        private void ProcessTagCodes_MovieLens(BlockingCollection<string> lines)
         {
             foreach(var line in lines.GetConsumingEnumerable())
             {
-                int delimeter = line.IndexOf(',');
-                string tagId = line.Substring(0, delimeter);
-                string tag = line.Substring(delimeter + 1);
-                tags[tagId] = tag;
+                var lineSpan = line.AsSpan();
+
+                int index = lineSpan.IndexOf(',');
+                string tagId = lineSpan.Slice(0, index).ToString();
+                lineSpan = lineSpan.Slice(index + 1);
+
+                string tagName = lineSpan.ToString();
+                
+                lock(tags)
+                {
+                    tags[tagId] = new Tag(tagName, tagId);
+                }
             }
-            Console.WriteLine("t6 Procces");
+            Console.WriteLine("t6 procces done");
         }
         private void ReadTagScores_MovieLens(BlockingCollection<string> lines)
         {
-            string filePath6 = "C:\\Users\\USER\\source\\repos\\semester2\\BigData\\ml-latest\\TagScores_MovieLens.csv";
-            using (StreamReader reader = new StreamReader(filePath6))
+            string filePath = "..\\..\\..\\ml-latest\\TagScores_MovieLens.csv";
+            using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
                 reader.ReadLine();
@@ -254,30 +329,45 @@ namespace BigData
                 Console.WriteLine("t7");
             }
         }
-        private void ProccesTagScores_MovieLens(BlockingCollection<string> lines)
+        private void ProcessTagScores_MovieLens(BlockingCollection<string> lines)
         {
             foreach(var line in lines.GetConsumingEnumerable())
             {
                 string[] fields = line.Split(',');
                 string movieId = fields[0];
                 string tagId = fields[1];
-                double relevance = Convert.ToDouble(fields[2], CultureInfo.InvariantCulture);
+                string relevanceString = fields[2];
+                if (relevanceString.Length > 4)
+                {
+                    relevanceString = relevanceString.Substring(0, 4);
+                }
+                double relevance = Convert.ToDouble(relevanceString, CultureInfo.InvariantCulture);
                 if (relevance > 0.5 && movies.ContainsKey(movieId) && tags.ContainsKey(tagId))
                 {
-                    movies[movieId].Tags.Add(tags[tagId]);
+                    lock(movies)
+                    {
+                        movies[movieId].Tags.Add(tags[tagId]);
+                    }
+                    
                     if (!tagsMovies.ContainsKey(tags[tagId]))
                     {
-                        tagsMovies[tags[tagId]] = new();
+                        lock(tagsMovies)
+                        {
+                            tagsMovies[tags[tagId]] = new();
+                        }
+                        
                     }
-                    tagsMovies[tags[tagId]].Add(movies[movieId]);
+
+                    lock(tagsMovies)
+                    {
+                        tagsMovies[tags[tagId]].Add(movies[movieId]);
+                    }
                 }
             }
-            Console.WriteLine("t7 Procces");
+            Console.WriteLine("t7 procces done");
         }
 
-
-
-        private async void ReadInfo()
+        private void ReadInfo()
         {
             BlockingCollection<string> MovieCodes_IMDBlines = new();
             BlockingCollection<string> ActorsDirectorsNames_IMDBlines = new();
@@ -288,37 +378,75 @@ namespace BigData
             BlockingCollection<string> TagScores_MovieLenslines = new();
 
             Task t1 = Task.Factory.StartNew
-                (() => ReadMovieCodes_IMDB(MovieCodes_IMDBlines), TaskCreationOptions.LongRunning);
-            Task t1Procces = Task.Factory.StartNew
-                (() => ProccesMovieCodes_IMDB(MovieCodes_IMDBlines), TaskCreationOptions.LongRunning);
-
+                (() => ReadMovieCodes_IMDB(MovieCodes_IMDBlines));
             Task t2 = Task.Factory.StartNew
                 (() => ReadActorsDirectorsNames_IMDB(ActorsDirectorsNames_IMDBlines), TaskCreationOptions.LongRunning);
-            Task t2Procces = Task.Factory.StartNew(
-                () => ProcessActorsDirectorsNames_IMDB(ActorsDirectorsNames_IMDBlines));
-
             Task t6 = Task.Factory.StartNew(
-                () => ReadTagCodes_MovieLens(TagCodes_MovieLenslines), TaskCreationOptions.LongRunning);
-            Task t6Procces = Task.Factory.StartNew(
-                () => ProccesTagCodes_MovieLens(TagCodes_MovieLenslines), TaskCreationOptions.LongRunning);
+                () => ReadTagCodes_MovieLens(TagCodes_MovieLenslines));
+            Task t4 = Task.Factory.StartNew(() => ReadRatings_IMDB(Ratings_IMDBlines));
+            Task t5 = Task.Factory.StartNew(() => Readlinks_IMDB_MovieLens(links_IMDB_MovieLenslines));
+            Task t3 = Task.Factory.StartNew(() => ReadActorsDirectorsCodes_IMDB(ActorsDirectorsCodes_IMDBlines), TaskCreationOptions.LongRunning);
+            Task t7 = Task.Factory.StartNew(() => ReadTagScores_MovieLens(TagScores_MovieLenslines), TaskCreationOptions.LongRunning);
 
-            Task t4 = Task.WhenAll(t1, t1Procces).ContinueWith(t => ReadRatings_IMDB(Ratings_IMDBlines));
-            Task t4Procces = Task.WhenAll(t1, t1Procces).ContinueWith(t => ProccesRatings_IMDB(Ratings_IMDBlines));
+            int n = Environment.ProcessorCount;
 
-            Task t5 = Task.WhenAll(t1, t1Procces).ContinueWith(t => Readlinks_IMDB_MovieLens(links_IMDB_MovieLenslines));
-            Task t5Procces = Task.WhenAll(t1, t1Procces).ContinueWith(t => Procceslinks_IMDB_MovieLens(links_IMDB_MovieLenslines));
+            List<Task> t6Processes = new();
+            for (int i = 0; i < 1; i++)
+            {
+                t6Processes.Add(Task.Factory.StartNew(
+                () => ProcessTagCodes_MovieLens(TagCodes_MovieLenslines)));
+            }
 
-            Task t3 = Task.WhenAll(t1, t2, t1Procces, t2Procces).ContinueWith(_ => ReadActorsDirectorsCodes_IMDB(ActorsDirectorsCodes_IMDBlines));
-            Task t3Procces = Task.WhenAll(t1, t2, t1Procces, t2Procces).ContinueWith(_ => ProccesActorsDirectorsCodes_IMDB(ActorsDirectorsCodes_IMDBlines));
-            
+            List<Task> t1Processes = new();
+            for (int i = 0; i < n; i++)
+            {
+                t1Processes.Add(Task.Factory.StartNew
+                (() => ProcessMovieCodes_IMDB(MovieCodes_IMDBlines)));
+            }
 
-            Task t7 = Task.WhenAll(t5, t6).ContinueWith(_ => ReadTagScores_MovieLens(TagScores_MovieLenslines));
-            Task t7Procces = Task.WhenAll(t5, t6).ContinueWith(_ => ProccesTagScores_MovieLens(TagScores_MovieLenslines));
+            List<Task> t4Processes = new();
+            for (int i = 0; i < n; i++)
+            {
+                t4Processes.Add(Task.WhenAll(t1Processes).ContinueWith(_ => ProcessRatings_IMDB(Ratings_IMDBlines)));
+            }
 
-            Task.WaitAll(t1, t2, t3, t4, t5, t6, t7,
-                t1Procces, t2Procces, t3Procces, t4Procces, t5Procces, t6Procces, t7Procces);
-            Console.Write("END");
+            List<Task> t5Processes = new();
+            for (int i = 0; i < n; i++)
+            {
+                t5Processes.Add(Task.WhenAll(t1Processes).ContinueWith(_ => Processlinks_IMDB_MovieLens(links_IMDB_MovieLenslines)));
+            }
+
+            List<Task> t2Processes = new();
+            for (int i = 0; i < n; i++)
+            {
+                t2Processes.Add(Task.Factory.StartNew(
+                () => ProcessActorsDirectorsNames_IMDB(ActorsDirectorsNames_IMDBlines)));
+            }
+
+            List<Task> t3Processes = new();
+            for (int i = 0; i < n; i++)
+            {
+                t3Processes.Add(Task.WhenAll(t2Processes.Concat(t1Processes)).ContinueWith(_ => ProcessActorsDirectorsCodes_IMDB(ActorsDirectorsCodes_IMDBlines)));
+            }
+
+            List<Task> t7Processes = new();
+            for (int i = 0; i < n; i++)
+            {
+                t7Processes.Add(Task.WhenAll(t5Processes.Concat(t6Processes)).ContinueWith(_ => ProcessTagScores_MovieLens(TagScores_MovieLenslines)));
+            }
+
+            Task.WaitAll(t1Processes.ToArray());
+            Task.WaitAll(t2Processes.ToArray());
+            Task.WaitAll(t3Processes.ToArray());
+            Task.WaitAll(t4Processes.ToArray());
+            Task.WaitAll(t5Processes.ToArray());
+            Task.WaitAll(t6Processes.ToArray());
+            Task.WaitAll(t7Processes.ToArray());
+            Task.WaitAll(t1, t2, t3, t4, t5, t6, t7);
+
+            Console.Write("end reading and processing");
         }
+
         private void Run()
         {
             ReadInfo();
@@ -371,15 +499,16 @@ namespace BigData
                     case "3":
                         {
                             Console.WriteLine("Введите тэг");
-                            string tag = Console.ReadLine();
-                            try
+                            string tagName = Console.ReadLine();
+                            Tag? tag = tags.Where(t => t.Value.Name == tagName).Select(t => t.Value).FirstOrDefault();
+                            if (tag != null)
                             {
                                 foreach (var film in tagsMovies[tag])
                                 {
                                     WriteFilm(film);
                                 }
                             }
-                            catch (Exception)
+                            else
                             {
                                 Console.WriteLine("Ничего не найдено");
                             }

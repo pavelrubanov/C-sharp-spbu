@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace BigData
 {
-    internal class Movie
+    public class Movie
     {
         public string NameRU { get; set; }
         public string NameUS { get; set; }
         public HashSet<Actor> Actors = new();
         public string Producer { get; set; }
-        public HashSet<string> Tags = new();
+        public HashSet<Tag> Tags = new();
         public int numVotes { get; set; }
         public double Rate { get;  set; }
         public string imdbId { get; set; }
