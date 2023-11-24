@@ -7,13 +7,16 @@ using System.Threading.Tasks;
 
 namespace BigData
 {
-    public class Actor
+    public class Tag
     {
+        public Tag() { }
+        public Tag(string name, string id) 
+        {
+            Name = name;
+            Id = id;
+        }
         public string Name { get; set; }
         [Key] public string Id { get; set; }
-        public bool IsProducer = false;
-        public List<Movie> Movies { get; set; }
-        public Actor() { }
-
+        public List<Movie> Movies { get; set; } = new();
     }
 }

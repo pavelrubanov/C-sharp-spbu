@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,15 +9,13 @@ namespace BigData
 {
     public class Movie
     {
-        public string NameRU { get; set; }
-        public string NameUS { get; set; }
-        public HashSet<Actor> Actors = new();
-        public string Producer { get; set; }
-        public HashSet<Tag> Tags = new();
-        public int numVotes { get; set; }
-        public double Rate { get;  set; }
-        public string imdbId { get; set; }
-        public string movieId { get; set; }
+        public string? NameRU { get; set; }
+        public string? NameUS { get; set; }
+        public List<Actor> Actors = new();
+        public List<Tag> Tags = new();
+        public double? Rate { get;  set; }
+        public string? imdbId { get; set; }
+        [Key] public string movieId { get; set; }
         public Movie()
         {
 
