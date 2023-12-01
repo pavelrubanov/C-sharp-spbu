@@ -15,12 +15,13 @@ namespace BigData
         public DbSet<Tag> Tags => Set<Tag>();
         public ApplicationContext()
         {
-            
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=helloappdb;Trusted_Connection=True;");
+            optionsBuilder.LogTo(Console.WriteLine, new[] { DbLoggerCategory.Update.Name });
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

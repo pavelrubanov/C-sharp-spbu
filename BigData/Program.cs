@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel.Design;
@@ -52,6 +53,8 @@ namespace BigData
         }
         public static void Main(string[] args)
         {
+            Parser p = new();
+            p.ReadInfo();
             using ApplicationContext db = new ApplicationContext();
             //Console.WriteLine(db.Movies.Count());Console.WriteLine(db.Actors.Count());Console.WriteLine(db.Tags.Count());
             while (true)
